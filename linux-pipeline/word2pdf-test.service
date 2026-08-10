@@ -1,0 +1,17 @@
+[Unit]
+Description=word2pdf pipeline A test service (LibreOffice + pdfplumber, port 8899)
+After=network.target
+
+[Service]
+Environment=SOFFICE_BIN=/opt/libreoffice7.6/program/soffice
+# 可选：接入管线 B Windows 打印解析节点
+#Environment=XPS_API=http://127.0.0.1:8090
+Type=simple
+WorkingDirectory=/opt/word2pdf-test
+ExecStart=/opt/word2pdf-test/venv/bin/python /opt/word2pdf-test/app.py
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target

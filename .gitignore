@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+venv/
+data/
+*.pdf
+*.xps
+*.png
+*.ppm
+*.doc
+*.docx
+*.bak
