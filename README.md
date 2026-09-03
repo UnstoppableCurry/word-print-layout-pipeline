@@ -14,6 +14,8 @@
 [![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=flat-square&logo=python&logoColor=white)](#pipeline-a-部署)
 
 **[ English Documentation → README_EN.md ](README_EN.md)**
+·
+**[ 架构文档站（静态 GitHub Pages，非在线演示）→ ](https://unstoppablecurry.github.io/word-print-layout-pipeline/)**
 
 </div>
 
@@ -65,6 +67,8 @@ windows-printnode/         管线 B · Windows 打印解析节点（:8090）
 ├── setup.ps1                节点初始化：固定 XPS 打印机文件端口 · 编译 · 注册自启
 ├── setup.cmd                setup.ps1 的 cmd 包装（无人值守安装入口）
 └── autounattend.xml         Win10 VM 无人值守安装应答文件（密码为占位符，需替换）
+
+docs/                      静态 GitHub Pages 架构站（中英，无转换后端）
 ```
 
 ## 🚀 Pipeline A 部署 · Linux（CentOS 7 验证通过）
@@ -87,7 +91,7 @@ systemctl enable --now lo-uno word2pdf-test
 systemctl edit word2pdf-test   # 添加 Environment=XPS_API=http://<windows节点IP>:8090
 ```
 
-打开 `http://<服务器>:8899`，上传 `.doc / .docx` 即可查看 A/B 双管线逐页并排对比。
+打开 `http://<服务器>:8899`，上传 `.doc / .docx` 即可查看 A/B 双管线逐页并排对比。仓库的 [GitHub Pages 架构站](https://unstoppablecurry.github.io/word-print-layout-pipeline/) 只提供静态说明，**不能**代替本机 :8899 对比页。
 
 ## 🖨 Pipeline B 部署 · Windows
 
@@ -133,5 +137,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for layout-faithful document processing · <a href="README_EN.md">English</a></sub>
+  <sub>Built with ❤️ for layout-faithful document processing · <a href="README_EN.md">English</a> · <a href="https://unstoppablecurry.github.io/word-print-layout-pipeline/">Docs</a></sub>
 </div>

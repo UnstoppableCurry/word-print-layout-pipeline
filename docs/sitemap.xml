@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://unstoppablecurry.github.io/word-print-layout-pipeline/</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/"/>
+  </url>
+  <url>
+    <loc>https://unstoppablecurry.github.io/word-print-layout-pipeline/en/</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/"/>
+  </url>
+</urlset>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Word Print Layout Pipeline · 架构与文档</title>
+  <meta name="description" content="Word 排版一致性双管线的静态架构文档：Linux LibreOffice + UNO 折行修复，与 Windows XPS 打印解析对照。本站不是在线转换演示。">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/">
+  <link rel="alternate" hreflang="zh-Hans" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/">
+  <link rel="alternate" hreflang="en" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/en/">
+  <link rel="alternate" hreflang="x-default" href="https://unstoppablecurry.github.io/word-print-layout-pipeline/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="Word Print Layout Pipeline · 架构与文档">
+  <meta property="og:description" content="静态文档站：说明双管线如何对照 Linux 转换与 Windows 真实打印。需要自建 LibreOffice 与 Windows XPS 节点，此处没有在线演示。">
+  <meta property="og:url" content="https://unstoppablecurry.github.io/word-print-layout-pipeline/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Word Print Layout Pipeline · 架构与文档">
+  <meta name="twitter:description" content="静态架构文档，不是在线 Word 转换演示。">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&family=Noto+Sans+SC:wght@400;600&family=Noto+Serif+SC:wght@600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "inLanguage": "zh-Hans",
+    "headline": "Word Print Layout Pipeline 架构与文档",
+    "description": "说明 Linux LibreOffice + UNO 折行修复与 Windows XPS 打印解析双管线。本页为静态文档，不是可运行的转换服务。",
+    "url": "https://unstoppablecurry.github.io/word-print-layout-pipeline/",
+    "license": "https://github.com/UnstoppableCurry/word-print-layout-pipeline/blob/main/LICENSE",
+    "isPartOf": {
+      "@type": "SoftwareSourceCode",
+      "name": "word-print-layout-pipeline",
+      "codeRepository": "https://github.com/UnstoppableCurry/word-print-layout-pipeline",
+      "license": "https://opensource.org/licenses/MIT"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="mast">
+    <div class="wrap mast-inner">
+      <a class="mark" href="./">
+        <svg class="crop" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h5v2H5v14h3v2H3V3zm13 0h5v18h-5v-2h3V5h-3V3z"/><rect x="10" y="11" width="4" height="2" fill="#b4232c"/></svg>
+        Word Print Layout Pipeline
+      </a>
+      <nav class="nav" aria-label="章节">
+        <a href="#problem">问题</a>
+        <a href="#architecture">架构</a>
+        <a href="#flow">双管线</a>
+        <a href="#deploy">部署</a>
+        <a href="#testing">实测</a>
+        <a href="#limits">局限</a>
+      </nav>
+      <nav class="lang" aria-label="语言">
+        <a href="./" hreflang="zh-Hans" lang="zh-Hans" aria-current="page" data-lang-link>中文</a>
+        <a href="en/" hreflang="en" lang="en" data-lang-link>EN</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="hero">
+      <div class="wrap">
+        <p class="kicker">
+          <span class="chip chip-warn">静态文档 · 非在线演示</span>
+          <span class="chip">MIT</span>
+          <span class="chip">Linux :8899</span>
+          <span class="chip">Windows :8090</span>
+        </p>
+        <h1>Word 排版一致性双管线：Linux 转换 × Windows 真实打印</h1>
+        <p class="lede">文本比对若只在 Linux 上用开源方案把 Word 转成「文字 + 坐标」，分页和折行可能与 Windows 上 Word / WPS 打印不一致。本仓库给出两条可独立部署、可交叉验证的管线；对照 UI 内置于 Linux Flask 服务，不在本 GitHub Pages 站点上运行。</p>
+        <aside class="notice" role="note">
+          <p><strong>没有浏览器里的实时转换。</strong>管线 A 需要本机 LibreOffice 7.6（UNO :2002）与 Flask（:8899）；管线 B 需要 Windows 上的 XPS 打印节点（:8090）。以下页面只说明架构、部署与仓库中已记录的测试，不代替自建服务。</p>
+        </aside>
+        <p class="cta-row">
+          <a class="btn" href="https://github.com/UnstoppableCurry/word-print-layout-pipeline">GitHub 仓库</a>
+          <a class="btn btn-ghost" href="https://github.com/UnstoppableCurry/word-print-layout-pipeline/blob/main/README.md">中文 README</a>
+          <a class="btn btn-ghost" href="https://github.com/UnstoppableCurry/word-print-layout-pipeline/blob/main/README_EN.md">English README</a>
+        </p>
+        <nav aria-labelledby="toc-h">
+          <h2 id="toc-h" class="sr-only">本页目录</h2>
+          <ul class="toc">
+            <li><a href="#problem">解决什么问题</a></li>
+            <li><a href="#architecture">架构总览</a></li>
+            <li><a href="#why">为何会和打印不一致</a></li>
+            <li><a href="#flow">双管线与对比页</a></li>
+            <li><a href="#tree">目录结构</a></li>
+            <li><a href="#deploy">部署与接口</a></li>
+            <li><a href="#testing">实测验证</a></li>
+            <li><a href="#license">授权</a></li>
+            <li><a href="#limits">局限与未声称事项</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <section id="problem" class="wrap prose">
+      <p class="sec-kicker">01 · 问题</p>
+      <h2>解决什么问题</h2>
+      <p>README 描述的场景：文本比对服务部署在 Linux 上。用 LibreOffice 等开源方案把 Word 转成 PDF，再解析「文字 + 坐标」时，<strong>分页与折行结果可能和 Windows 上 Word / WPS 直接打印的排版不一致</strong>（窜行、窜页），从而导致比对误判。</p>
+      <p>仓库提供一套<strong>可独立部署、可交叉验证</strong>的双管线，而不是单一「云端排版引擎」：</p>
+      <div class="table-scroll">
+        <table>
+          <caption>摘自 README.md / README_EN.md 的管线对照。授权成本列为项目文档中的表述，不是商业报价。</caption>
+          <thead>
+            <tr><th>管线</th><th>环境</th><th>技术路线</th><th>文档中的授权成本</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>A · <code>linux-pipeline</code></strong></td>
+              <td>Linux</td>
+              <td>LibreOffice headless + UNO 折行修复器 → PDF → pdfplumber 解析文字 + 坐标</td>
+              <td>文档写为零（全开源依赖）</td>
+            </tr>
+            <tr>
+              <td><strong>B · <code>windows-printnode</code></strong></td>
+              <td>Windows</td>
+              <td>真实 Word / WPS 打印到 XPS 虚拟打印机 → 解析 XPS 文字 + 坐标 + 页面渲染图</td>
+              <td>复用机器上已有的 Office 授权（见授权节）</td>
+            </tr>
+            <tr>
+              <td><strong>对比页</strong></td>
+              <td>内置于 A</td>
+              <td>上传 Word → 双管线同跑 → 总体判定 + 逐页并排渲染 + 逐行文字/坐标对照</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>源码中的打印引擎实现见 <a href="https://github.com/UnstoppableCurry/word-print-layout-pipeline/blob/main/windows-printnode/PrintParseService.cs"><code>PrintParseService.cs</code></a>：若存在 <code>Word.Application</code> ProgID 则使用 <code>WordComPrintEngine</code>（引擎名 <code>word</code>），否则回退 <code>WordpadPrintEngine</code>（引擎名 <code>wordpad-placeholder</code>）。注释写明 WordPad 排版不等于 Word，仅用于打通管线。源码<strong>没有</strong>单独的 WPS COM 引擎类；README 将 Word / WPS 打印作为对照基准来描述。</p>
+    </section>
+
+    <section id="architecture" class="wrap prose">
+      <p class="sec-kicker">02 · 架构</p>
+      <h2>架构总览</h2>
+      <p>下图把 README 中的 Mermaid 流程图转成可缩放 SVG，语义与仓库文档一致：上传分流到 A/B，分别得到 PDF 解析结果与 XPS 解析结果，再汇入对比页。</p>
+      <figure class="diagram">
+        <figcaption id="arch-cap">双管线数据流（对应 README 架构图）</figcaption>
+        <img src="assets/img/architecture.svg" width="920" height="280" alt="上传 Word 后同时进入 Linux 管线 A（LibreOffice 与 UNO 修复，端口 8899）和 Windows 管线 B（Word COM 打印到 XPS，端口 8090）。A 产出 PDF 并由 pdfplumber 取文字与坐标；B 解析 XPS 得到文字、坐标与页面 PNG。两侧结果汇入对比页，做逐页并排、逐行对照和行数判定。">
+        <ol class="flow-list">
+          <li>上传 <code>.doc</code> / <code>.docx</code>。</li>
+          <li>管线 A（Linux :8899）：LibreOffice + UNO 折行修复 → PDF → pdfplumber 文字 + 坐标。</li>
+          <li>管线 B（Windows :8090）：Word COM 打印到 XPS 虚拟打印机 → XPS 解析文字 + 坐标 + 页面 PNG。</li>
+          <li>对比页（Flask 内嵌 HTML，<code>app.py</code>）：逐页并排、逐行文字/坐标对照、按页行数判定。</li>
+        </ol>
+        <p class="legend">
+          <span><i class="swatch swatch-lo" aria-hidden="true"></i>管线 A / PDF</span>
+          <span><i class="swatch swatch-xps" aria-hidden="true"></i>管线 B / XPS</span>
+          <span><i class="swatch swatch-cmp" aria-hidden="true"></i>对比页（仅自建 Flask）</span>
+        </p>
+      </figure>
+    </section>
+
+    <section id="why" class="wrap prose">
+      <p class="sec-kicker">03 · 折行</p>
+      <h2>为什么 LibreOffice 转 PDF 会和打印不一致</h2>
+      <p>README 的说明：LibreOffice 与 Word 的<strong>折行规则不同</strong>。最典型的一类是「数字串 + 全角标点」长串——Word / WPS 视其为可逐字断开的序列，而 LibreOffice 将其当作<strong>不可拆分的西文单词</strong>整体推入下一行，造成整行下移、内容窜页。</p>
+      <figure class="diagram">
+        <figcaption>同一长数字串在两种折行规则下的差异（示意，非实测截图）</figcaption>
+        <img src="assets/img/wrap-problem.svg" width="920" height="300" alt="左侧 LibreOffice 把整段数字与全角标点当作不可拆西文单词推到下一行；右侧 Word 或 WPS 打印允许在数字串内断开。下方说明 UNO 修复器读取真实字体与行宽，用 token 模型或压缩逐字模型插入显式断行。源码只处理长度至少 60 的数字标点串段落。">
+      </figure>
+      <p><a href="https://github.com/UnstoppableCurry/word-print-layout-pipeline/blob/main/linux-pipeline/uno_linewrap_fix.py"><code>uno_linewrap_fix.py</code></a> 通过 UNO API 读取文档真实字体、字号与行宽，按源码注释中「从基准 PDF 逆向」的两套模型模拟断行，并在转换前插入显式 <code>LINE_BREAK</code>：</p>
+      <ul>
+        <li><strong>token 模型</strong>（<code>simulate_breaks_token</code>）：段落含「数字,数字」胶合时使用；数字/半角逗号点连串可再粘一个全角标点，断点只在 token 末尾。</li>
+        <li><strong>压缩逐字模型</strong>（<code>simulate_breaks_compressed</code>）：全角标点数字串；ASCII 宽约 <code>0.492em</code>，否则 <code>0.92em</code>。</li>
+        <li>仅处理匹配 <code>[0-9、，。,．]{60,}</code> 的段落；<strong>其他段落不动</strong>。</li>
+        <li>页心宽度取自页面样式；源码用约 <code>4.6pt</code> 的 Word/LO 宽度差，以及 token 路径上的 <code>14.1pt</code> 标点悬挂余量（按字号缩放）。</li>
+        <li>连接 <code>127.0.0.1:2002</code> 的 UNO socket（<code>start_uno.sh</code> / <code>lo-uno.service</code>）。</li>
+      </ul>
+      <p>README 写到：在所列生产/实测文档上，输出与 Windows 打印基准<strong>逐页行数一致</strong>。这是文档中对那些样本的记录，<strong>不是</strong>对任意 Word 文件的保证。见<a href="#testing">实测验证</a>与<a href="#limits">局限</a>。</p>
+    </section>
+
+    <section id="flow" class="wrap prose">
+      <p class="sec-kicker">04 · 运行时</p>
+      <h2>双管线与对比页（源码路径）</h2>
+      <div class="split split-2">
+        <article class="panel panel-lo">
+          <h3>管线 A · <code>linux-pipeline/app.py</code></h3>
+          <p>Flask 监听 <code>0.0.0.0:8899</code>，上传上限 50 MiB，仅 <code>.doc</code> / <code>.docx</code>。</p>
+          <ol>
+            <li>优先用 LibreOffice 自带 Python 调用折行修复器，写出 PDF。</li>
+            <li>修复失败或产物过小则<strong>回退</strong> <code>soffice --headless --convert-to pdf:writer_pdf_Export</code>（回退路径不再插入断行）。</li>
+            <li><code>pdfplumber.extract_words</code>，<code>Y_TOL = 3.5</code>（注释：来自 Windows 双管线实测，填空文字基线漂移 2.1pt，容差须 ≥3pt），按 top 聚类成行。</li>
+            <li>可选：<code>POST {XPS_API}/api/print-parse</code>。默认 <code>XPS_API=http://127.0.0.1:8090</code>。XPS 坐标乘 <code>0.75</code>（96 dpi → PDF pt）。过滤纯空白行，保留 <code>raw_line_count</code>。</li>
+          </ol>
+        </article>
+        <article class="panel panel-xps">
+          <h3>管线 B · <code>PrintParseService.cs</code></h3>
+          <p><code>HttpListener</code> 前缀 <code>http://+:8090/</code>。作业在 STA 线程打印并解析（WPF 渲染要求）。</p>
+          <ol>
+            <li>打印到已由 <code>setup.ps1</code> 固定文件端口的 Microsoft XPS Document Writer（<code>C:\printnode\print\output.xps</code>）。</li>
+            <li>手动导航 XPS OPC（绕过交错 XPS 上 <code>GetFixedDocumentSequence</code> 可能为 null）。</li>
+            <li>OpenXPS 命名空间替换为 WPF 可加载的 MS XPS 命名空间；<code>Glyphs</code> 抽字，基线容差 3.0 聚行。</li>
+            <li>页面以 2× <code>RenderTargetBitmap</code> 出 PNG。</li>
+          </ol>
+        </article>
+      </div>
+      <h3>对比页判定（内嵌于 Flask，非本站）</h3>
+      <p><code>app.py</code> 中的页面：总体判定在 XPS 可用时比较<strong>各页行数是否相等</strong>；逐行表对文字做空白归一化比较，并显示 Δtop / Δx0。界面将 Δtop &gt; 2.5 或 Δx0 &gt; 3.5 标为「坐标漂移」。B 失败时展示 <code>xps_error</code>，不假装两侧都成功。</p>
+    </section>
+
+    <section id="tree" class="wrap prose">
+      <p class="sec-kicker">05 · 仓库</p>
+      <h2>目录结构</h2>
+      <pre><code>linux-pipeline/            管线 A · Linux word2pdf + 双管线对比 test 服务
+├── app.py                   Flask（:8899）上传 Word → A/B 解析 + 对比页
+├── uno_linewrap_fix.py      UNO 折行修复器（双断行模型）
+├── requirements.txt         flask==3.0.3, pdfplumber==0.11.4, requests
+├── start_uno.sh             LibreOffice UNO 监听 127.0.0.1:2002
+├── lo-uno.service           systemd · UNO
+└── word2pdf-test.service    systemd · Flask；SOFFICE_BIN 指向 LO 7.6
+
+windows-printnode/         管线 B · Windows 打印解析节点（:8090）
+├── PrintParseService.cs     单文件：打印 → XPS → 文字 + 坐标 + PNG
+├── setup.ps1                固定 XPS 文件端口 · csc 编译 · 计划任务自启
+├── setup.cmd                setup.ps1 的 cmd 包装
+└── autounattend.xml         Win10 VM 应答文件（密码占位符须替换）
+
+docs/                      本静态 GitHub Pages 站点（无转换后端）</code></pre>
+    </section>
+
+    <section id="deploy" class="wrap prose">
+      <p class="sec-kicker">06 · 部署</p>
+      <h2>部署与测试方式</h2>
+      <h3>Pipeline A · Linux</h3>
+      <p>README 写明在 <strong>CentOS 7</strong> 上验证通过。步骤与仓库一致：</p>
+      <pre><code># 1. 将 LibreOffice 7.6 装到 /opt/libreoffice7.6（版本固化，勿随意升级）
+
+# 2. 部署代码
+mkdir -p /opt/word2pdf-test
+cp linux-pipeline/{app.py,uno_linewrap_fix.py,requirements.txt} /opt/word2pdf-test/
+python3 -m venv /opt/word2pdf-test/venv
+/opt/word2pdf-test/venv/bin/pip install -r /opt/word2pdf-test/requirements.txt
+
+# 3. 注册并启动服务
+cp linux-pipeline/{lo-uno.service,word2pdf-test.service} /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now lo-uno word2pdf-test
+
+# 4.（可选）接入管线 B
+systemctl edit word2pdf-test   # Environment=XPS_API=http://&lt;windows节点IP&gt;:8090</code></pre>
+      <p>部署完成后打开 <code>http://&lt;服务器&gt;:8899</code> 上传 <code>.doc</code> / <code>.docx</code>。该地址是<strong>你自己的主机</strong>，不是本 GitHub Pages 域名。</p>
+      <h3>Pipeline B · Windows</h3>
+      <p>README：无需虚拟机，任一已安装 Word 或 WPS 的办公电脑可作节点。管理员 PowerShell 在 <code>windows-printnode</code> 目录执行：</p>
+      <pre><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1</code></pre>
+      <p><code>setup.ps1</code> 会：创建 <code>C:\printnode</code>；放行 8090 与 URL ACL；将 Microsoft XPS Document Writer 端口钉到 <code>C:\printnode\print\output.xps</code>；用系统 <code>csc.exe</code>（.NET Framework 4.x）编译；注册 <code>PrintParseService</code> 计划任务。脚本还包含 RDP、高性能电源方案与关闭自动更新等本机设置——部署前请按你的安全策略审阅。</p>
+      <div class="table-scroll">
+        <table>
+          <caption>管线 B HTTP API（:8090），摘自 README 与 <code>PrintParseService.cs</code>。</caption>
+          <thead>
+            <tr><th>方法</th><th>路径</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>GET</code></td><td><code>/health</code></td><td>健康检查；JSON 含 <code>status</code>、<code>engine</code>（<code>word</code> 或 <code>wordpad-placeholder</code>）、<code>printer</code></td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/print-parse</code></td><td>multipart 字段 <code>file</code>，返回每页文字 + 坐标 + <code>image_url</code></td></tr>
+            <tr><td><code>GET</code></td><td><code>/images/{job}/{n}.png</code></td><td>页面渲染图</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>可选无人值守 VM：将 <code>autounattend.xml</code>、<code>setup.cmd</code>、<code>setup.ps1</code>、<code>PrintParseService.cs</code> 打成 ISO。应答文件密码占位符为 <code>CHANGE-ME-Password</code>，<strong>使用前必须替换</strong>。</p>
+      <h3>本站（GitHub Pages）如何发布</h3>
+      <p>仓库 <code>.github/workflows/pages.yml</code> 在推送到 <code>main</code> 时用官方 <code>actions/configure-pages</code>、<code>upload-pages-artifact</code>、<code>deploy-pages</code> 发布 <code>docs/</code>。仓库设置需选择 <strong>GitHub Actions</strong> 作为 Pages 源。预期地址：<a href="https://unstoppablecurry.github.io/word-print-layout-pipeline/">https://unstoppablecurry.github.io/word-print-layout-pipeline/</a>。</p>
+    </section>
+
+    <section id="testing" class="wrap prose">
+      <p class="sec-kicker">07 · 实测</p>
+      <h2>仓库记录的实测验证</h2>
+      <p>下表完整转写 README「实测验证」一节。行数来自那些测试文档上管线 A 与管线 B（打印基准）的对照；<strong>未</strong>提供更多文档、未给出耗时或正确率统计。</p>
+      <div class="table-scroll">
+        <table>
+          <caption>来源：README.md / README_EN.md「实测验证 / Verified Results」。</caption>
+          <thead>
+            <tr><th>测试文档</th><th>管线 A 每页行数</th><th>管线 B（打印基准）</th><th>文档中的结果</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>多页长数字串文档（7 页）</td><td>46, 45, 45, 45, 45, 45, 44</td><td>46, 45, 45, 45, 45, 45, 44</td><td>逐页一致</td></tr>
+            <tr><td>老版多页文档（7 页）</td><td>47, 46, 45, 45, 45, 45, 45</td><td>47, 46, 45, 45, 45, 45, 45</td><td>逐页一致</td></tr>
+            <tr><td>折行测试文档（1 页）</td><td>4</td><td>4</td><td>一致</td></tr>
+            <tr><td>单页授权书（1 页）</td><td>15</td><td>15</td><td>一致</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>自行验证：在已部署的 <code>:8899</code> 上传上述类型或其他文件，查看总体判定与逐行表。GitHub Pages <strong>不能</strong>代替这一步。</p>
+    </section>
+
+    <section id="license" class="wrap prose">
+      <p class="sec-kicker">08 · 授权</p>
+      <h2>授权说明</h2>
+      <ul>
+        <li><strong>本项目代码</strong>：<a href="https://github.com/UnstoppableCurry/word-print-layout-pipeline/blob/main/LICENSE">MIT License</a>（Copyright 2026 Qian Wang），文档写明可自由商用。</li>
+        <li><strong>管线 A</strong>：依赖 LibreOffice（MPL 2.0）；README 称服务器端使用无授权问题——以 LibreOffice 与贵方法务为准。</li>
+        <li><strong>管线 B</strong>：依赖 Windows + Microsoft Word / WPS，须保证所用机器授权合法。README：微软许可原则不允许在服务器端用 Office 自动化为无许可客户端提供服务。</li>
+        <li><strong>商业 SDK</strong>（README 举例 Aspose / Spire 等）：文档称其实测折行与 Word 打印不一致，且授权费每年数千至数万美元；本项目不采用。此处不评价这些产品的当前行为或价格。</li>
+      </ul>
+    </section>
+
+    <section id="limits" class="wrap prose">
+      <p class="sec-kicker">09 · 边界</p>
+      <h2>局限与本站不会声称的内容</h2>
+      <ul class="limit-list">
+        <li><strong>无在线演示。</strong>本域名只有静态 HTML/CSS/SVG。不能上传 Word，也不能调用 :8899 / :8090。</li>
+        <li><strong>UNO 修复范围有限。</strong>只处理 ≥60 字符的数字/指定标点长串段落；模型由特定基准校准，不是完整的 Word 排版引擎。</li>
+        <li><strong>回退会失去修复。</strong><code>convert_to_pdf</code> 在 UNO 失败时走裸转换，折行仍可能与打印不一致。</li>
+        <li><strong>WordPad 回退不是打印基准。</strong>未安装 Word 时引擎名为 <code>wordpad-placeholder</code>，源码写明排版 ≠ Word。</li>
+        <li><strong>对比页以行数为主。</strong>「总体判定」比的是每页行数；文字与坐标另有容差，坐标接近不等于视觉像素级一致。</li>
+        <li><strong>样本表不是全体正确率。</strong>README 的 100% 逐页行数一致仅针对表中文档，不外推到未测文件、未测 LO 版本或未测打印机驱动。</li>
+        <li><strong>版本钉死。</strong>文档要求 LibreOffice 7.6 装在 <code>/opt/libreoffice7.6</code>，不要随意升级。Linux 侧写明 CentOS 7 验证；未声称其他发行版已测。</li>
+        <li><strong>无客户、性能或 SLA 数据。</strong>本站不编造部署客户、吞吐、时延或「全平台支持」。</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <p>静态文档 · <a href="https://github.com/UnstoppableCurry/word-print-layout-pipeline">UnstoppableCurry/word-print-layout-pipeline</a> · <a href="en/" hreflang="en" data-lang-link>English</a> · 内容依据仓库 README 与源码，若有出入以源码为准。</p>
+    </div>
+  </footer>
+  <script src="assets/js/site.js" defer></script>
+</body>
+</html>

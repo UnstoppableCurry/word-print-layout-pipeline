@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" role="img" aria-labelledby="wrapTitle wrapDesc">
+  <title id="wrapTitle">Why LibreOffice pagination can diverge from Word print</title>
+  <desc id="wrapDesc">A long run of digits plus full-width punctuation is treated by Word or WPS as a sequence that may break character by character. LibreOffice treats the same run as one unbreakable western word and pushes it to the next line, shifting later lines and spilling content onto the next page.</desc>
+  <rect width="920" height="300" fill="#faf6ee"/>
+  <text x="24" y="36" fill="#1a5c28" font-family="IBM Plex Mono, monospace" font-size="12">LIBREOFFICE (unbreakable western word)</text>
+  <rect x="24" y="48" width="420" height="100" fill="#e4f0e4" stroke="#1a5c28" stroke-width="1.5"/>
+  <text x="40" y="78" fill="#1a1612" font-family="IBM Plex Sans, Noto Sans SC, sans-serif" font-size="14">Line n    && prefix text</text>
+  <rect x="40" y="92" width="388" height="36" fill="#faf6ee" stroke="#b4232c" stroke-dasharray="4 3"/>
+  <text x="52" y="115" fill="#b4232c" font-family="IBM Plex Mono, monospace" font-size="13">123456789012& (whole run ’ next line)</text>
+  <text x="40" y="146" fill="#5e564c" font-family="IBM Plex Sans, Noto Sans SC, sans-serif" font-size="13">Following lines shift · page overflow risk</text>
+  <text x="476" y="36" fill="#163f73" font-family="IBM Plex Mono, monospace" font-size="12">WORD / WPS PRINT (per-character break)</text>
+  <rect x="476" y="48" width="420" height="100" fill="#e3ebf4" stroke="#163f73" stroke-width="1.5"/>
+  <text x="492" y="78" fill="#1a1612" font-family="IBM Plex Sans, Noto Sans SC, sans-serif" font-size="14">Line n    && prefix 1234567890</text>
+  <text x="492" y="108" fill="#1a1612" font-family="IBM Plex Sans, Noto Sans SC, sans-serif" font-size="14">Line n+1  12345678& continues</text>
+  <text x="492" y="138" fill="#5e564c" font-family="IBM Plex Sans, Noto Sans SC, sans-serif" font-size="13">Breaks allowed inside the digit/punct run</text>
+  <rect x="24" y="176" width="872" height="100" fill="#fff" stroke="#1a1612"/>
+  <text x="40" y="206" fill="#b4232c" font-family="IBM Plex Mono, monospace" font-size="12">UNO FIXER (uno_linewrap_fix.py)</text>
+  <text x="40" y="232" fill="#1a1612" font-family="IBM Plex Sans, Noto Sans SC, sans-serif" font-size="14">Read real font, size, and text width via UNO ’ simulate Word breaks (token model or compressed per-character model) ’ insert explicit LINE_BREAK before PDF export.</text>
+  <text x="40" y="256" fill="#5e564c" font-family="IBM Plex Sans, sans-serif" font-size="13">Scope in source: paragraphs matching a e60-character digit/punctuation run. Other paragraphs are left unchanged.</text>
+</svg>
