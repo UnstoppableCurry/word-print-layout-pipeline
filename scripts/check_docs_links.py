@@ -50,6 +50,15 @@ def main() -> int:
             if "upload" in lower and "type=\"file\"" in lower:
                 errors.append(f"{page.relative_to(ROOT)}: must not include a Word upload form")
 
+    for svg in (ROOT / "assets/img/architecture.svg", ROOT / "assets/img/wrap-problem.svg"):
+        raw = svg.read_bytes()
+        try:
+            raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            errors.append(f"{svg.name}: not UTF-8 ({exc})")
+        if not raw.startswith(b"<?xml"):
+            errors.append(f"{svg.name}: missing XML declaration")
+
     for extra in (
         ROOT / "assets/css/site.css",
         ROOT / "assets/js/site.js",
