@@ -14,6 +14,8 @@
 [![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=flat-square&logo=python&logoColor=white)](#-pipeline-a--linux)
 
 **[ 中文文档 → README.md ](README.md)**
+·
+**[ Architecture site (static GitHub Pages, not a live demo) → ](https://unstoppablecurry.github.io/word-print-layout-pipeline/en/)**
 
 </div>
 
@@ -65,6 +67,8 @@ windows-printnode/         Pipeline B · Windows print-parse node (:8090)
 ├── setup.ps1                Node bootstrap: pin XPS printer to file port · compile · autostart
 ├── setup.cmd                cmd wrapper for setup.ps1 (unattended-install entry)
 └── autounattend.xml         Win10 VM unattended answer file (password is a placeholder — replace it)
+
+docs/                      Static GitHub Pages architecture site (zh/en, no conversion backend)
 ```
 
 ## 🚀 Pipeline A · Linux (verified on CentOS 7)
@@ -87,7 +91,7 @@ systemctl enable --now lo-uno word2pdf-test
 systemctl edit word2pdf-test   # add Environment=XPS_API=http://<windows-node-ip>:8090
 ```
 
-Open `http://<server>:8899` and upload a `.doc / .docx` to see the side-by-side A/B comparison.
+Open `http://<server>:8899` and upload a `.doc / .docx` to see the side-by-side A/B comparison. The [GitHub Pages architecture site](https://unstoppablecurry.github.io/word-print-layout-pipeline/en/) is static documentation only and **does not** replace a self-hosted :8899 compare UI.
 
 ## 🖨 Pipeline B · Windows
 
@@ -133,5 +137,5 @@ Package `autounattend.xml` + `setup.cmd` + `setup.ps1` + `PrintParseService.cs` 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for layout-faithful document processing · <a href="README.md">中文文档</a></sub>
+  <sub>Built with ❤️ for layout-faithful document processing · <a href="README.md">中文文档</a> · <a href="https://unstoppablecurry.github.io/word-print-layout-pipeline/en/">Docs</a></sub>
 </div>
